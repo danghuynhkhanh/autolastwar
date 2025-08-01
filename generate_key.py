@@ -6,7 +6,8 @@ import pyperclip
 
 # Hàm tạo key bản quyền
 def generate_key(machine_id, days_valid):
-    expiry_date = (datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=days_valid)).strftime('%Y-%m-%d')
+    from datetime import datetime, timedelta, timezone
+    expiry_date = (datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=days_valid)).strftime('%Y-%m-%d')
     raw_data = f"{machine_id}|{expiry_date}"
     hash_part = hashlib.sha256(raw_data.encode()).hexdigest()[:16].upper()
     return f"{hash_part}-{expiry_date}"
