@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trang người dùng</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #eaf4fb;
+            padding: 20px;
+            max-width: 900px;
+            margin: auto;
+        }
+        h2 {
+            color: #333;
+        }
+        a {
+            text-decoration: none;
+            color: #007BFF;
+            margin-right: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        hr {
+            margin: 30px 0;
+        }
+        .section {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        iframe {
+            width: 100%;
+            height: 315px;
+            border: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Xin chào, {{ user[1] }}!</h2>
+    <p>💰 Số dư: {{ user[3] }} đ</p>
+    <a href="/buy">Mua key</a>
+    <a href="/deposit">Nạp tiền</a>
+    <a href="/download">Tải Auto</a>
+    <a href="/logout">Đăng xuất</a>
+
+    <h3>🔑 Danh sách key đã mua:</h3>
+    <table>
+        <tr>
+            <th>Key</th>
+            <th>Ngày tạo</th>
+            <th>Hết hạn</th>
+        </tr>
+        {% for key in keys %}
+        <tr>
+            <td>{{ key[2] }}</td>
+            <td>{{ key[3] }}</td>
+            <td>{{ key[4] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <hr>
+
+    <div class="section">
+        <h2>{{ homepage[0] or "🎬 Video hướng dẫn sử dụng" }}</h2>
+        <p><strong>📌 Hướng dẫn sử dụng:</strong><br>{{ homepage[1] or "Làm theo video dưới đây." }}</p>
+        <p><strong>📞 Liên hệ admin:</strong><br>{{ homepage[2] or "Zalo: 0366905470" }}</p>
+
+        <iframe src="{{ homepage[3] or 'https://www.youtube.com/embed/orbkg5JH9C8' }}" allowfullscreen></iframe>
+
+    </div>
+</body>
+</html>

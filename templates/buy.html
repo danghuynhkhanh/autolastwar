@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mua key</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eaf4fb;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        form {
+            background: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        a {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🛒 Mua Key AutoLastWar</h2>
+    <form method="POST" action="/buy">
+        <label for="plan">Chọn gói key:</label>
+        <select name="plan" required>
+            <option value="1 tháng">1 tháng (30.000đ)</option>
+            <option value="3 tháng">3 tháng (90.000đ)</option>
+            <option value="6 tháng">6 tháng (180.000đ)</option>
+            <option value="12 tháng">12 tháng (360.000đ)</option>
+        </select>
+
+        <label for="machine_id">Nhập mã máy:</label>
+        <input type="text" name="machine_id" required>
+
+        <button type="submit">Mua ngay</button>
+    </form>
+
+    <a href="/dashboard">⬅ Quay lại</a>
+
+</body>
+</html>

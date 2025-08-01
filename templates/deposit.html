@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nạp tiền</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #eaf4fb;
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        h2, h3 {
+            color: #333;
+        }
+        .section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #f9f9f9;
+            padding: 10px;
+            border-left: 4px solid #007BFF;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        p {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="section">
+        <h2>💳 Nạp tiền thủ công</h2>
+        <p>Vui lòng chuyển khoản vào một trong hai tài khoản dưới đây và ghi đúng <b>nội dung chuyển khoản là tên đăng nhập của bạn</b>.</p>
+
+        <div class="info">
+            <p><strong>📱 Momo:</strong> 0366905470 - Đặng Huỳnh Khánh</p>
+            <p><strong>🏦 Sacombank:</strong> 070027138861 - Đặng Huỳnh Khánh</p>
+        </div>
+
+        <a class="btn" href="https://zalo.me/0366905470" target="_blank">💬 Liên hệ admin cộng tiền</a>
+    </div>
+
+    <div class="section">
+        <p><strong>Tài khoản:</strong> {{ user[1] }}</p>
+        <p><strong>Số dư hiện tại:</strong> {{ user[3] }} đ</p>
+        <a href="/dashboard">⬅ Quay lại</a>
+    </div>
+
+</body>
+</html>

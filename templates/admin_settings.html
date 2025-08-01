@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cài đặt trang chủ</title>
+</head>
+<body>
+    <h2>🛠️ Quản lý thông tin trang chủ</h2>
+    <form method="POST">
+        <label>Tiêu đề trang:</label><br>
+        <input type="text" name="title" value="{{ title }}" style="width:100%"><br><br>
+
+        <label>Hướng dẫn sử dụng:</label><br>
+        <textarea name="guide" rows="5" style="width:100%">{{ guide }}</textarea><br><br>
+
+        <label>Thông tin liên hệ:</label><br>
+        <textarea name="contact" rows="3" style="width:100%">{{ contact }}</textarea><br><br>
+
+        <label>Link nhúng video YouTube:</label><br>
+        <input type="text" name="video" value="{{ video }}" style="width:100%"><br><br>
+
+        <button type="submit">💾 Lưu thay đổi</button>
+    </form>
+    <p><a href="/admin">⬅ Quay về admin</a></p>
+</body>
+</html>

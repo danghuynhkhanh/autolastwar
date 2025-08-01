@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trang quản trị</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #eaf4fb;
+            padding: 20px;
+            max-width: 1000px;
+            margin: auto;
+        }
+        h2, h3 {
+            color: #333;
+        }
+        a {
+            text-decoration: none;
+            color: #007BFF;
+            margin-right: 10px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 12px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .section {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h2>👑 Admin Panel</h2>
+        <p>
+            <a href="/admin-settings">⚙ Cài đặt trang chủ</a> |
+            <a href="/logout">🚪 Đăng xuất</a>
+        </p>
+    </div>
+
+    <div class="section">
+        <h3>👥 Danh sách người dùng</h3>
+        <form method="POST">
+            <label>ID người dùng:</label>
+            <input type="text" name="user_id" required>
+            <label>Số tiền cộng:</label>
+            <input type="number" name="amount" required>
+            <button type="submit">➕ Cộng tiền</button>
+        </form>
+        <table>
+            <tr><th>ID</th><th>Tài khoản</th><th>Mật khẩu</th><th>Số dư</th></tr>
+            {% for u in users %}
+            <tr><td>{{ u[0] }}</td><td>{{ u[1] }}</td><td>{{ u[2] }}</td><td>{{ u[3] }}</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>📨 Yêu cầu nạp tiền</h3>
+        <table>
+            <tr><th>ID</th><th>Người dùng</th><th>Nội dung</th><th>Thời gian</th></tr>
+            {% for d in deposits %}
+            <tr><td>{{ d[0] }}</td><td>{{ d[1] }}</td><td>{{ d[2] }}</td><td>{{ d[3] }}</td></tr>
+            {% else %}
+            <tr><td colspan="4">Không có yêu cầu nào.</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>
