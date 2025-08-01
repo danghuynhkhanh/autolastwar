@@ -1,78 +1,97 @@
-from flask import Flask, render_template, redirect, request, session
-from datetime import datetime, timedelta
-import sqlite3, os
-from generate_key import generate_key
+from flask import Flask, render_template, request, redirect, session
+import sqlite3
+from datetime import datetime, timedelta, timezone
+import hashlib
 
 app = Flask(__name__)
-app.secret_key = "supersecret"
-
+app.secret_key = 'your_secret_key'
 DB_FILE = 'database.db'
-if not os.path.exists(DB_FILE):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT, balance INTEGER DEFAULT 0)''')
-    c.execute('''CREATE TABLE keys (id INTEGER PRIMARY KEY, user_id INTEGER, key TEXT, created_at TEXT, expired_at TEXT)''')
-    c.execute('''CREATE TABLE deposits (id INTEGER PRIMARY KEY, user_id INTEGER, amount INTEGER, note TEXT, created_at TEXT)''')
-    c.execute('''CREATE TABLE homepage (id INTEGER PRIMARY KEY, title TEXT, guide TEXT, contact TEXT, video_url TEXT)''')
-    c.execute("INSERT INTO homepage (id, title, guide, contact, video_url) VALUES (1, 'AutoLastWar', 'Hướng dẫn...', 'Liên hệ admin...', '')")
-    conn.commit()
-    conn.close()
+
+def generate_key(machine_id, days_valid):
+    vn_timezone = timezone(timedelta(hours=7))  # Giờ Việt Nam
+    expiry_date = (datetime.now(vn_timezone).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=days_valid)).strftime('%Y-%m-%d')
+    raw_data = f"{machine_id}|{expiry_date}"
+    hash_part = hashlib.sha256(raw_data.encode()).hexdigest()[:16].upper()
+    return f"{hash_part}-{expiry_date}"
 
 def get_user(username):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE username = ?", (username,))
+    c.execute("SELECT id, username, password, balance FROM users WHERE username = ?", (username,))
     user = c.fetchone()
     conn.close()
     return user
 
 @app.route('/')
 def index():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("SELECT title, guide, contact, video_url FROM homepage WHERE id = 1")
-    homepage = c.fetchone()
-    conn.close()
-    return render_template('index.html', homepage=homepage)
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        u, p = request.form['username'], request.form['password']
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        try:
-            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (u, p))
-            conn.commit()
-            return redirect('/login')
-        except:
-            return "Tên tài khoản đã tồn tại!"
-    return render_template('register.html')
+    return redirect('/dashboard')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        u, p = request.form['username'], request.form['password']
-        user = get_user(u)
-        if user and user[2] == p:
-            session['username'] = u
+        username = request.form['username'].strip()
+        password = request.form['password'].strip()
+
+        user = get_user(username)
+        if user and user[2] == password:
+            session['username'] = username
             return redirect('/dashboard')
-        else:
-            return "Sai tài khoản hoặc mật khẩu!"
+        return "Sai tài khoản hoặc mật khẩu."
     return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect('/login')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = request.form['password'].strip()
+
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE username = ?", (username,))
+        if c.fetchone():
+            conn.close()
+            return "Tài khoản đã tồn tại."
+        c.execute("INSERT INTO users (username, password, balance) VALUES (?, ?, ?)", (username, password, 0))
+        conn.commit()
+        conn.close()
+        return redirect('/login')
+    return render_template('register.html')
 
 @app.route('/dashboard')
 def dashboard():
-    if 'username' not in session: return redirect('/login')
+    if 'username' not in session:
+        return redirect('/login')
     user = get_user(session['username'])
+
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("SELECT * FROM keys WHERE user_id = ?", (user[0],))
+    c.execute("SELECT key, created_at, expired_at FROM keys WHERE user_id = ?", (user[0],))
     keys = c.fetchall()
-    c.execute("SELECT title, guide, contact, video_url FROM homepage WHERE id = 1")
-    homepage = c.fetchone()
     conn.close()
-    return render_template('dashboard.html', user=user, keys=keys, homepage=homepage)
+
+    return render_template('dashboard.html', user=user, keys=keys)
+
+@app.route('/deposit', methods=['GET', 'POST'])
+def deposit():
+    if 'username' not in session:
+        return redirect('/login')
+    user = get_user(session['username'])
+
+    if request.method == 'POST':
+        amount = int(request.form['amount'])
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("UPDATE users SET balance = balance + ? WHERE id = ?", (amount, user[0]))
+        conn.commit()
+        conn.close()
+        return redirect('/dashboard')
+
+    return render_template('deposit.html', user=user)
 
 @app.route('/buy', methods=['GET', 'POST'])
 def buy():
@@ -98,15 +117,18 @@ def buy():
         if user[3] < price:
             return "Không đủ số dư!"
 
+        # Sử dụng múi giờ Việt Nam giống với phần mềm PC
+        vn_tz = timezone(timedelta(hours=7))
+        created_at = datetime.now(vn_tz).strftime("%Y-%m-%d %H:%M:%S")
+        expired_date = (datetime.now(vn_tz).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=days)).strftime("%Y-%m-%d")
+
         key = generate_key(machine_id, days)
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        expired = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
 
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
         c.execute("UPDATE users SET balance = balance - ? WHERE id = ?", (price, user[0]))
         c.execute("INSERT INTO keys (user_id, key, created_at, expired_at) VALUES (?, ?, ?, ?)",
-                  (user[0], key, now, expired))
+                  (user[0], key, created_at, expired_date))
         conn.commit()
         conn.close()
 
@@ -114,76 +136,14 @@ def buy():
 
     return render_template('buy.html', user=user)
 
-@app.route('/deposit', methods=['GET', 'POST'])
-def deposit():
-    if 'username' not in session: return redirect('/login')
-    user = get_user(session['username'])
-    if request.method == 'POST':
-        note = request.form['note']
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        c.execute("INSERT INTO deposits (user_id, amount, note, created_at) VALUES (?, ?, ?, ?)",
-                  (user[0], 0, note, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        conn.commit()
-        conn.close()
-        return redirect('/dashboard')
-    return render_template('deposit.html', user=user)
-
-@app.route('/admin', methods=['GET', 'POST'])
-def admin():
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-
-    if request.method == 'POST':
-        username = request.form['user_id']
-        amount = int(request.form['amount'])
-        c.execute('SELECT id FROM users WHERE username = ?', (username,))
-        result = c.fetchone()
-        if result:
-            user_id = result[0]
-            c.execute('UPDATE users SET balance = balance + ? WHERE id = ?', (amount, user_id))
-            conn.commit()
-        else:
-            conn.close()
-            return "❌ Tài khoản không tồn tại!"
-
-    c.execute('SELECT * FROM users')
-    users = c.fetchall()
-    c.execute('SELECT COUNT(*) FROM users')
-    total_users = c.fetchone()[0]
-    c.execute('SELECT * FROM deposits ORDER BY id DESC')
-    deposits = c.fetchall()
-    conn.close()
-    return render_template('admin.html', users=users, deposits=deposits, total_users=total_users)
-
-@app.route('/admin-settings', methods=['GET', 'POST'])
-def admin_settings():
-    if session.get('username') != 'admin': return redirect('/')
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    if request.method == 'POST':
-        title = request.form['title']
-        guide = request.form['guide']
-        contact = request.form['contact']
-        video = request.form['video']
-        c.execute("UPDATE homepage SET title=?, guide=?, contact=?, video_url=? WHERE id=1",
-                  (title, guide, contact, video))
-        conn.commit()
-    c.execute("SELECT title, guide, contact, video_url FROM homepage WHERE id=1")
-    homepage = c.fetchone()
-    conn.close()
-    return render_template('admin_settings.html', title=homepage[0], guide=homepage[1], contact=homepage[2], video=homepage[3])
-
 @app.route('/download')
 def download():
     return render_template('download.html')
 
-@app.route('/logout')
-def logout():
-    session.clear()
+@app.route('/admin-settings', methods=['GET', 'POST'])
+def admin_settings():
+    # Có thể bỏ qua nếu bạn không cần sửa phần này
     return redirect('/')
 
-# ✅ Dòng này dùng để chạy trên Render (lấy PORT từ biến môi trường)
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
