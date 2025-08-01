@@ -114,8 +114,6 @@ def buy():
 
     return render_template('buy.html', user=user)
 
-
-
 @app.route('/deposit', methods=['GET', 'POST'])
 def deposit():
     if 'username' not in session: return redirect('/login')
@@ -136,15 +134,11 @@ def admin():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
 
-    # Cộng tiền nếu có POST
     if request.method == 'POST':
-        username = request.form['user_id']  # Thực chất là username
+        username = request.form['user_id']
         amount = int(request.form['amount'])
-
-        # Tìm user theo username
         c.execute('SELECT id FROM users WHERE username = ?', (username,))
         result = c.fetchone()
-
         if result:
             user_id = result[0]
             c.execute('UPDATE users SET balance = balance + ? WHERE id = ?', (amount, user_id))
@@ -153,29 +147,20 @@ def admin():
             conn.close()
             return "❌ Tài khoản không tồn tại!"
 
-    # Lấy danh sách người dùng
     c.execute('SELECT * FROM users')
     users = c.fetchall()
-
-    # Tổng số tài khoản
     c.execute('SELECT COUNT(*) FROM users')
     total_users = c.fetchone()[0]
-
-    # Lấy danh sách yêu cầu nạp tiền
     c.execute('SELECT * FROM deposits ORDER BY id DESC')
     deposits = c.fetchall()
-
     conn.close()
     return render_template('admin.html', users=users, deposits=deposits, total_users=total_users)
-
-
 
 @app.route('/admin-settings', methods=['GET', 'POST'])
 def admin_settings():
     if session.get('username') != 'admin': return redirect('/')
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-
     if request.method == 'POST':
         title = request.form['title']
         guide = request.form['guide']
@@ -184,7 +169,6 @@ def admin_settings():
         c.execute("UPDATE homepage SET title=?, guide=?, contact=?, video_url=? WHERE id=1",
                   (title, guide, contact, video))
         conn.commit()
-
     c.execute("SELECT title, guide, contact, video_url FROM homepage WHERE id=1")
     homepage = c.fetchone()
     conn.close()
@@ -198,6 +182,8 @@ def download():
 def logout():
     session.clear()
     return redirect('/')
-if __name__ == '__main__':
-    app.run(debug=True)
 
+# ✅ Dòng này dùng để chạy trên Render (lấy PORT từ biến môi trường)
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
